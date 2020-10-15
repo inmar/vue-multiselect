@@ -36,7 +36,11 @@ export default {
       this.pointerDirty = false
     },
     pointer () {
-      this.$refs.search && this.$refs.search.setAttribute('aria-activedescendant', this.id + '-' + this.pointer.toString())
+      if (this.$refs.search) {
+        this.$refs.search.setAttribute('aria-activedescendant', this.accessibilityId + '-option-' + this.pointer.toString())
+      } else if (this.$refs.list) {
+        this.$refs.list.setAttribute('aria-activedescendant', this.accessibilityId + '-option-' + this.pointer.toString())
+      }
     }
   },
   methods: {

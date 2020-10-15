@@ -10,7 +10,9 @@
     @keyup.esc="deactivate()"
     class="multiselect"
     role="combobox"
-    :aria-owns="'listbox-'+id">
+    :aria-expanded="isOpen ? 'true' : false"
+    aria-haspopup="listbox"
+    :aria-owns="'listbox-'+accessibilityId">
       <slot name="caret" :toggle="toggle">
         <div @mousedown.prevent.stop="toggle()" class="multiselect__select"></div>
       </slot>
@@ -48,7 +50,7 @@
           ref="search"
           v-if="searchable"
           :name="name"
-          :id="id"
+          :id="accessibilityId"
           type="text"
           autocomplete="off"
           spellcheck="false"
@@ -66,7 +68,8 @@
           @keypress.enter.prevent.stop.self="addPointerElement($event)"
           @keydown.delete.stop="removeLastElement()"
           class="multiselect__input"
-          :aria-controls="'listbox-'+id"
+          :aria-controls="'listbox-'+accessibilityId"
+
         />
         <span
           v-if="isSingleLabelVisible"
@@ -97,7 +100,7 @@
           :style="{ maxHeight: optimizedHeight + 'px' }"
           ref="list"
         >
-          <ul class="multiselect__content" :style="contentStyle" role="listbox" :id="'listbox-'+id" aria-multiselectable="true" tabindex="-1">
+          <ul class="multiselect__content" ref="list" :style="contentStyle" role="listbox" :id="'listbox-'+accessibilityId" aria-multiselectable="true" tabindex="-1">
             <slot name="beforeList"></slot>
             <li v-if="multiple && max === internalValue.length">
               <span class="multiselect__option">
@@ -108,7 +111,7 @@
               <li class="multiselect__element"
                 v-for="(option, index) of filteredOptions"
                 :key="index"
-                v-bind:id="id + '-' + index"
+                v-bind:id="accessibilityId + '-option-' + index"
                 v-bind:role="!(option && (option.$isLabel || option.$isDisabled)) ? 'option' : null"
                 :aria-selected="isSelected(option) ? 'true': 'false'">
                 <span
@@ -163,6 +166,15 @@ export default {
   name: 'vue-multiselect',
   mixins: [multiselectMixin, pointerMixin],
   props: {
+    /**
+     * id attribute to connect elements
+     * @default ''
+     * @type {String}
+     */
+    id: {
+      type: String,
+      default: ''
+    },
     /**
      * name attribute to match optional label element
      * @default ''
@@ -300,7 +312,16 @@ export default {
       default: 0
     }
   },
+  data () {
+    const { _uid } = this
+    return {
+      localId_: _uid
+    }
+  },
   computed: {
+    accessibilityId () {
+      return `vms-${this.id || this.localId_}`
+    },
     isSingleLabelVisible () {
       return (
         (this.singleValue || this.singleValue === 0) &&
